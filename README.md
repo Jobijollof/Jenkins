@@ -367,6 +367,36 @@ systemctl enable nexus
 
 - Launch Instance
 
+`
+ssh -i "nexus-key.pem" centos@ec2-54-221-41-104.compute-1.amazonaws.com
+`
+Use this string to connect to nexus server. Run the command 
+
+`systemctl status nexus`
+
+![status](./images/centos-ssh.png)
+
+- Collect the public ip of the Nexus server and open Sonartype Nexus Repository
+  - publicIP:8081
+
+![sonar](./images/sonar-nexus.png)
+
+- Sign in
+  - copy path for password
+
+![pwsd](./images/sonar-pswd.png)
+
+- ssh into Nexus server
+
+`cat /opt/nexus/sonatype-work/nexus3/admin.password on the`
+
+![cat](./images/cat-pwwd.png)
+
+- Change password (please note the password cause we are going to mention it in the pipeline code)
+- ![enable](./images/enable-anonymous.png)
+
+- Finish
+
 
 ### Sonar Server
 
@@ -380,7 +410,7 @@ Launch Instance
   - port 22-ssh
   - port 80 (we have Nginx running. We can connect and also Jenkins can connect)
 - Keypair
-- Advanced setting
+- Advanced details
    - User data
 
  ```
@@ -505,17 +535,83 @@ sleep 30
 reboot
 
 ```
-- Collect the public ip of the Nexus server and open Sonartype Nexus Repository
-  publicIP:8081
-![sonar](./images/sonar-nexus.png)
 
-- Sign in
-  - copy path for password
+- Take public ip and paste on browser.
 
-![pwsd](./images/sonar-pswd.png)
+![job](./images/sonar-landingpage.png)
 
-- ssh into Nexus server
+![sonar](./images/login-sonar.png)
 
-`cat /opt/nexus/sonatype-work/nexus3/admin.password on the `
+![sonar](./images/loggedin-sonar.png)
 
+### Plugins for CI
 
+- Nexus plugin
+- Sonarqube
+- Git(plugin already installed by default)
+- Pipeline Maven integration plugin
+-Build timestamp (for versioning artifacts)
+
+On Jenkins dashboard click on 
+
+- Manage Jenkins
+   - plugins
+      - Available
+         - Nexus artifact uploader
+         - Sonarqube scanner
+         - Build timestamp
+         - Pipeline utility steps(add plugin although not in screenshot)
+
+![plugin](./images/ci-plugins.png)
+
+### Running the pipeline script 
+
+- New item
+  - name new item
+- Click Pipeline
+![item](./images/PAAC.png)
+
+- Scroll down to pipeline
+- leave the dropdown at pipeline script
+- add the following script 
+
+```
+pipeline {
+	agent any
+	tools {
+	    maven "MAVEN3"
+	    jdk "OracleJDK8"
+	}
+
+	stages {
+	    stage('Fetch code') {
+            steps {
+               git branch: 'vp-rem', url: 'https://github.com/devopshydclub/vprofile-repo.git'
+            }
+
+	    }
+
+	    stage('Build'){
+	        steps{
+	           sh 'mvn install -DskipTests'
+	        }
+
+	        post {
+	           success {
+	              echo 'Now Archiving it...'
+	              archiveArtifacts artifacts: '**/target/*.war'
+	           }
+	        }
+	    }
+
+	    stage('UNIT TEST') {
+            steps{
+                sh 'mvn test'
+            }
+        }
+	}
+} 
+
+```
+- Click on save 
+- Click on Build Now
