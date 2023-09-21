@@ -1,111 +1,5 @@
 # Jenkins
-Introduction to Jenkins. Setting up a Pipeline using Jenkins, Sonarqube and Nexus
-
-## Introduction
-
-In Devops engineering everything is automated.  We automate the CI/CD Pipeline  using the Jenkinsfile
-
-In this project, we are going to learn how to automate pipeline setup with Jenkinsfile.
-
-- Jenkinsfile  defines the stages in CI/CD pipeline
-
-- Jenkinsfile is a text file with pipeline DSL (domain specific language) syntax
-
--  Similar to groovy but you do not have to understand or write groovy to understand or write a Jenkinsfile.
-
-- Jenkinsfile has two syntax
-  - Scripted 
-  - Declarative
-
-- Scripted is outdated now Declarative is the way forward now.
-
-
-## Pipeline Concepts
-
-- Pipeline is the main block of code
-
-  - Jenkins will execute everything within that block
-  - node/agent (you can define where the pipeline will be executed on which node or which agent)
-
-- stages define the different stages of the pipeline, such as Build, Test, and Deploy.
-Each stage contains specific steps that should be executed for that stage.
-  - in stage you have step (eg maven install or git pull or upload artifact or any steps you want to execute from your pipeline)
-
-- The post block defines actions to be taken after the pipeline run, such as notifications or clean-up actions.
-### Sample Code  
-
-```
-pipeline {
-    agent any  // Run on any available agent (Jenkins slave/agent)
-    
-    stages {
-        stage('Build') {
-            steps {
-                echo 'Building the application...'
-                // Add build commands here (e.g., compile code, package application)
-            }
-        }
-        
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-                // Add test commands here (e.g., run unit tests, integration tests)
-            }
-        }
-        
-        stage('Deploy') {
-            steps {
-                echo 'Deploying the application...'
-                // Add deployment commands here (e.g., deploy to a server)
-            }
-        }
-    }
-    
-    post {
-        always {
-            // Clean up, notifications, or other actions to be performed regardless of the build result
-        }
-        success {
-            echo 'Pipeline executed successfully!'
-        }
-        failure {
-            echo 'Pipeline failed!'
-        }
-    }
-}
-
-```
-
-In this example, we're echoing some messages to represent build, test, and deployment actions.  We are going to replace these with actual build, test, and deployment steps relevant to our project.
-
-- Environment Variables:
-Environment variables are specific to a stage or step and can be accessed using the environment block.
-
-```
-pipeline {
-    agent any
-
-    stages {
-        stage('Example') {
-            environment {
-                ENV_VARIABLE = 'some value'
-            }
-            steps {
-                echo "Environment variable value: ${ENV_VARIABLE}"
-            }
-        }
-    }
-}
-
-```
-Project 1
-In the project we aregoing to write the pipeline to
-
-- Fetch the code
-- Build the code 
-- Run some tests.
-
-Pay attention to opening and closing of curly braces.
+Introduction to Jenkins. 
 
 ## Steps for CI pipeline Setup 
 
@@ -113,11 +7,11 @@ Pay attention to opening and closing of curly braces.
 
 - Nexus Server
 
-- Sonarqube Server (All three of them will be set up using User data Scripts(bash scripts))
+- Sonarqube Server 
 
 - Security group
 
-- Install neccessary 
+- Install necessary plugins
 
 - Integrate 
   - nexus
@@ -230,22 +124,82 @@ Install node.js plugin
 ![maven](./images/MAVEN3.png)
 
 - We would have added the git tool but by default, git is already installed in ubuntu. 
-- Other distros will have us installing git with the yum package manager. 
-   
-   
+- Other distros will have us installing git with the yum package manager.
 
 
+## Create New Job in Jenkins
+
+There are two types of Jobs in Jenkins, a freestyle project and also pipeline as code.
+
+***A freestyle project*** in Jenkins is a type of project that allows you to build, test, and deploy software using a variety of different options and configurations. You can use freestyle projects to implement simple jobs, such as building and testing a project, or more complex jobs, such as deploying a project to multiple environments.
 
 
+***A pipeline as a code*** project is a type of project that uses code to define the build, test, and deployment process. This allows you to version control your pipeline and make changes to it in a controlled manner. Pipeline as a code projects are typically more complex to set up than freestyle projects, but they offer more flexibility and control.
 
+Here is a comparison of freestyle projects and pipeline as a code projects:
 
+![pipeline](./images/pipeline-frestylediff.png)
 
+Which type of project should you use?
 
+If you are new to CI/CD or you need a simple pipeline, then a freestyle project is a good option. However, if you need a more complex pipeline or you want to version control your pipeline, then a pipeline as a code project is a better option.
 
+### Examples of freestyle projects
 
+- Building and testing a Java project
+- Deploying a static website to a web server
+- Running a shell script to perform a specific task
 
+### Examples of pipeline as a code projects
 
+- Building and testing a microservices architecture
+- Deploying a web application to multiple environments
+- Running a complex pipeline that includes multiple steps, such as building, testing, - - - - - linting, and deploying
 
+How to get started with pipeline as a code projects
+
+If you are interested in getting started with pipeline as a code projects, there are a few things you need to do:
+
+- Choose a pipeline as a code tool. There are a number of different tools available, such as Jenkins Pipeline, CircleCI, and GitHub Actions.
+
+- Create a pipeline file. This file will define the steps in your pipeline and the tools that you will use.
+
+- Store your pipeline file in a version control system. This will allow you to version control your pipeline and make changes to it in a controlled manner.
+
+- Configure your pipeline as a code tool to use your pipeline file.
+
+- Start running your pipeline!
+
+   ### creating a freestyle job to run a shell script
+
+- On Jenkins dashboard click on new item
+![new](./images/new-job.png)
+
+- Enter item name 
+- Click on freestyle project
+- click ok
+![freestyle](./images/new-freestyle.png)
+
+- Write a description 
+
+- Under build steps 
+- Add build steps
+  - execute shell 
+
+- write your commands
+- Save
+- Go back to the dashboard
+- Click into your 
+- Click build now
+If you see this output, then you have successfully done your first build.
+
+![build](./images/numba-1.png)
+
+You can checkt the console output for sucess or otherwise of your job
+![build](./images/console-output.png)
+
+### Creating a freestyle build job with artifacts 
+[Check here](https://github.com/Jobijollof/DevOps-Projects/tree/main/Project%209%20Introduction%20to%20Jenkins)
 
 
 ### Nexus server
@@ -307,3 +261,112 @@ systemctl enable nexus
 ```
 
 - Launch Instance
+
+Setting up a Pipeline using Jenkins, Sonarqube and Nexus
+
+## Introduction
+
+In Devops engineering everything is automated.  We automate the CI/CD Pipeline  using the Jenkinsfile
+
+In this project, we are going to learn how to automate pipeline setup with Jenkinsfile.
+
+- Jenkinsfile  defines the stages in CI/CD pipeline
+
+- Jenkinsfile is a text file with pipeline DSL (domain specific language) syntax
+
+-  Similar to groovy but you do not have to understand or write groovy to understand or write a Jenkinsfile.
+
+- Jenkinsfile has two syntax
+  - Scripted 
+  - Declarative
+
+- Scripted is outdated now Declarative is the way forward now.
+
+
+## Pipeline Concepts
+
+- Pipeline is the main block of code
+
+  - Jenkins will execute everything within that block
+  - node/agent (you can define where the pipeline will be executed on which node or which agent)
+
+- stages define the different stages of the pipeline, such as Build, Test, and Deploy.
+Each stage contains specific steps that should be executed for that stage.
+  - in stage you have step (eg maven install or git pull or upload artifact or any steps you want to execute from your pipeline)
+
+- The post block defines actions to be taken after the pipeline run, such as notifications or clean-up actions.
+### Sample Code  
+
+```
+pipeline {
+    agent any  // Run on any available agent (Jenkins slave/agent)
+    
+    stages {
+        stage('Build') {
+            steps {
+                echo 'Building the application...'
+                // Add build commands here (e.g., compile code, package application)
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                echo 'Running tests...'
+                // Add test commands here (e.g., run unit tests, integration tests)
+            }
+        }
+        
+        stage('Deploy') {
+            steps {
+                echo 'Deploying the application...'
+                // Add deployment commands here (e.g., deploy to a server)
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Clean up, notifications, or other actions to be performed regardless of the build result
+        }
+        success {
+            echo 'Pipeline executed successfully!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
+    }
+}
+
+```
+
+In this example, we're echoing some messages to represent build, test, and deployment actions.  We are going to replace these with actual build, test, and deployment steps relevant to our project.
+
+- Environment Variables:
+Environment variables are specific to a stage or step and can be accessed using the environment block.
+
+```
+pipeline {
+    agent any
+
+    stages {
+        stage('Example') {
+            environment {
+                ENV_VARIABLE = 'some value'
+            }
+            steps {
+                echo "Environment variable value: ${ENV_VARIABLE}"
+            }
+        }
+    }
+}
+
+```
+Project 1
+In the project we aregoing to write the pipeline to
+
+- Fetch the code
+- Build the code 
+- Run some tests.
+
+Pay attention to opening and closing of curly braces.
+
