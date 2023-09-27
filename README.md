@@ -94,39 +94,6 @@ After creating an admin user  Save and finish  and proceed to Jenkins dashboard
 
 Install node.js plugin
 
-
-### Install Tools in Jenkins
-
-- Click Manage Jenkins (This is administrative page of Jenkins, only admin user will have access)
-
-- Click on Tools (The tools there are few because they have plugins if you need more tools then you have to install plugins)
-
-- Click add Jdk
-  - name - OracleJDK11
-  - Java_Home - java path when you connect to Jenkins server
-  - ls /usr/lib/jvm/ home directory of jdk on jenkins
-
-![path](./images/jdk-path.png)  
-
-- Click add java again
-   - name - OracleJDK8(we do not have that on th server so we will install it)
-   - As root run `apt update`
-   - `apt upgrade`
-   - `apt install openjdk-8-jdk -y`
-
-![path](./images/jdk8-path.png)
-
-- Jenkins UI
-![path](./images/add-jdk8nd11.png)
-
-- Maven Tool
-  - add the Maven tool
-![maven](./images/MAVEN3.png)
-
-- We would have added the git tool but by default, git is already installed in ubuntu. 
-- Other distros will have us installing git with the yum package manager.
-
-
 ## Create New Job in Jenkins
 
 There are two types of Jobs in Jenkins, a freestyle project and also pipeline as code.
@@ -170,6 +137,38 @@ If you are interested in getting started with pipeline as a code projects, there
 
 - Start running your pipeline!
 
+### Install Tools in Jenkins
+
+- Click Manage Jenkins (This is administrative page of Jenkins, only admin user will have access)
+
+- Click on Tools (The tools there are few because they have plugins if you need more tools then you have to install plugins)
+
+- Click add Jdk
+  - name - OracleJDK11
+  - Java_Home - java path when you connect to Jenkins server
+  - ls /usr/lib/jvm/ home directory of jdk on jenkins
+
+![path](./images/jdk-path.png)  
+
+- Click add java again
+   - name - OracleJDK8(we do not have that on th server so we will install it)
+   - As root run `apt update`
+   - `apt upgrade`
+   - `apt install openjdk-8-jdk -y`
+
+![path](./images/jdk8-path.png)
+
+- Jenkins UI
+![path](./images/add-jdk8nd11.png)
+
+- Maven Tool
+  - add the Maven tool
+![maven](./images/MAVEN3.png)
+
+- We would have added the git tool but by default, git is already installed in ubuntu. 
+- Other distros will have us installing git with the yum package manager.
+
+
    ### creating a freestyle job to run a shell script
 
 - On Jenkins dashboard click on new item
@@ -200,6 +199,18 @@ You can checkt the console output for sucess or otherwise of your job
 
 ### Creating a freestyle build job with artifacts 
 [Check here](https://github.com/Jobijollof/DevOps-Projects/tree/main/Project%209%20Introduction%20to%20Jenkins)
+
+
+If you have this error working with Jenkins
+
+![jenkins](./images/valid-crumb.png)
+
+- Go to `manage jenkisn`
+
+- Click on Security 
+- For `csrf protection`
+   - check enable proxity compatibility
+   - apply.
 
 
 ### Setting up a Pipeline using Jenkins, Sonarqube and Nexus
@@ -388,9 +399,9 @@ Use this string to connect to nexus server. Run the command
 
 - ssh into Nexus server
 
-`cat /opt/nexus/sonatype-work/nexus3/admin.password on the`
+`cat /opt/nexus/sonatype-work/nexus3/admin.password `
 
-![cat](./images/cat-pwwd.png)
+![cat](./images/sonar-realpwd.png)
 
 - Change password (please note the password cause we are going to mention it in the pipeline code)
 - ![enable](./images/enable-anonymous.png)
@@ -556,11 +567,18 @@ On Jenkins dashboard click on
 
 - Manage Jenkins
    - plugins
-      - Available
+      - Available plugins
          - Nexus artifact uploader
          - Sonarqube scanner
          - Build timestamp
          - Pipeline utility steps(add plugin although not in screenshot)
+
+- Click Install
+
+![success](./images/sucess.png)
+
+
+
 
 ![plugin](./images/ci-plugins.png)
 
@@ -615,3 +633,238 @@ pipeline {
 ```
 - Click on save 
 - Click on Build Now
+![pipe](./images/happy-pipeline.png)
+
+
+
+## Code Analysis
+
+Code analysis in CI/CD is the process of inspecting code for potential errors, vulnerabilities, and compliance issues. It is typically performed as part of the CI/CD pipeline, before code is deployed to production.
+
+Code analysis tools can be used to find a wide variety of problems, including:
+
+- Syntax errors: These are errors in the code that prevent it from compiling or running.
+- Semantic errors: These are errors in the code that do not prevent it from compiling or running, but may cause it to behave unexpectedly.
+- Security vulnerabilities: These are weaknesses in the code that could be exploited by an attacker.
+- Compliance issues: These are violations of coding standards or other compliance requirements.
+
+Code analysis can help to improve the quality, security, and reliability of software. It can also help to reduce the risk of shipping code with defects.
+
+There are a variety of code analysis tools available, both commercial and open source. Some popular code analysis tools include:
+
+SonarQube
+Checkmarx
+Fortify
+Coverity
+CodeQL
+
+
+Code analysis tools can be integrated into CI/CD pipelines using a variety of methods. For example, some tools can be installed as plugins for popular CI/CD tools such as Jenkins and CircleCI. Other tools can be integrated into CI/CD pipelines using APIs.
+
+### Benefits of using code analysis in CI/CD:
+
+- Improved code quality: Code analysis can help to identify and fix errors, vulnerabilities, and compliance issues in code. This can lead to improved code quality and reliability.
+- Reduced risk of shipping code with defects: Code analysis can help to reduce the risk of shipping code with defects to production. This can save time and money, and improve the customer experience.
+- Increased developer productivity: Code analysis can help developers to identify and fix problems in their code early on. This can save them time and effort, and allow them to focus on writing new code.
+
+Overall, code analysis is an important part of any CI/CD pipeline. It can help to improve the quality, security, and reliability of software, and reduce the risk of shipping code with defects.
+
+
+### Workflow
+
+![jenkins](./images/code-analysis.png)
+
+We are focusing on Sonarqube and Checkstyle for our project
+### Steps
+
+- Integrate sonarqube server with Jenkins
+
+- Install Sonarqube scanner tool 
+
+- Write our script
+
+### Configure SonarQube Server
+
+- Go to maanage Jenkins on jenkins server
+  - Click on tools
+    - SonarQube Scanner
+       - Add Sonarqube Scanner
+
+![sonar](./images/sonar-installation.png)
+
+### Integrate Sonarqube Server with Jenkins
+
+- Click on Configure System
+- Look for Sonarqube server(if you do not see this, install sonarqube plugin)
+  - Add Sonarqube
+  - Check Enviroment variables
+    - Give a name
+    - Server Url (public IP of Sonar Server)
+    - Server authentication token
+       - Go to Sonar server
+
+![jenkins](./images/generate-token.png)
+
+- Take note of the token you generated
+
+![jenkins](./images/secret-text.png)
+
+
+- Save
+### Pipeline as a code Checkstyle
+
+ - Create new item
+ - Enter item name
+ - Click on pipeline 
+ - Click 
+ - Scroll to pipeline scrip and
+ - Drop the following code and
+ - Save
+ - Click on build Now
+
+ ```
+pipeline {
+    agent any
+    tools {
+	    maven "MAVEN3"
+	    jdk "OracleJDK8"
+	}
+
+    stages{
+        stage('Fetch code') {
+          steps{
+              git branch: 'vp-rem', url:'https://github.com/devopshydclub/vprofile-repo.git'
+          }  
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean install -DskipTests'
+            }
+            post {
+                success {
+                    echo "Now Archiving."
+                    archiveArtifacts artifacts: '**/*.war'
+                }
+            }
+        }
+        stage('Test'){
+            steps {
+                sh 'mvn test'
+            }
+
+        }
+
+        stage('Checkstyle Analysis'){
+            steps {
+                sh 'mvn checkstyle:checkstyle'
+            }
+        }
+
+    }
+}
+
+```
+![checkstyle](./images/check-style.png)
+
+- [SonarQube Scanner for Jenkins](https://www.jenkins.io/doc/pipeline/steps/sonar/)
+
+### Sonar Server
+- Repeat new item step
+- Drop this code in the pipeline
+
+```
+pipeline {
+    agent any
+    tools {
+	    maven "MAVEN3"
+	    jdk "OracleJDK8"
+	}
+    stages{
+        stage('Fetch code') {
+          steps{
+              git branch: 'vp-rem', url:'https://github.com/devopshydclub/vprofile-repo.git'
+          }  
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean install -DskipTests'
+            }
+            post {
+                success {
+                    echo "Now Archiving."
+                    archiveArtifacts artifacts: '**/*.war'
+                }
+            }
+        }
+        stage('Test'){
+            steps {
+                sh 'mvn test'
+            }
+
+        }
+
+        stage('Checkstyle Analysis'){
+            steps {
+                sh 'mvn checkstyle:checkstyle'
+            }
+        }
+
+        stage('Sonar Analysis') {
+            environment {
+                scannerHome = tool 'sonar4.7'
+            }
+            steps {
+               withSonarQubeEnv('sonar') {
+                   sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+                   -Dsonar.projectName=vprofile \
+                   -Dsonar.projectVersion=1.0 \
+                   -Dsonar.sources=src/ \
+                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+              }
+            }
+        }
+
+    }
+}
+
+```
+- Click on Build Now
+
+![sonar](./images/sonar-analysis.png)
+
+![sonar](./images/sonar-integration.png)
+
+![passed](./images/passed.png)
+
+
+### Setup our own quality gate
+In the previous example we used the default quality gate on sonar server. We are going to set up our own quality gate.
+
+- Go to Sonar server 
+- Click Quality 
+![quality](./images/quality-gates.png)
+
+- Click on Create
+[jenkins](./images/create.png)
+[qg](./images/v-qg.png)
+
+- Add condition
+ - check `On Overall code`
+
+![jenkins](./images/metrics.png)
+
+- Add condition
+
+### Link quality gate to the project
+
+- Go to project settings on sonar server
+![jenkins](./images/project-setting.png)
+
+- Click on quality gate
+- Pick your quality gate
+
