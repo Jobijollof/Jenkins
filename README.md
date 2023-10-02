@@ -867,4 +867,276 @@ In the previous example we used the default quality gate on sonar server. We are
 
 - Click on quality gate
 - Pick your quality gate
+ ### Set up webhooks
 
+ - Go to project settings on Sonar Server
+ - Click on webhooks
+   - create
+      - Name (anyname you choose)
+      - Url (private ip of Jenkins because its going to connect internally in the same network)
+
+![webhook](./images/webhook-jenkins.png)
+
+- Click on create
+[webhook](./images/webhook.png)
+
+- Repeat process of creating new item or configure a previous one.
+
+```
+pipeline {
+    agent any
+    tools {
+	    maven "MAVEN3"
+	    jdk "OracleJDK8"
+	}
+    stages{
+        stage('Fetch code') {
+          steps{
+              git branch: 'vp-rem', url:'https://github.com/devopshydclub/vprofile-repo.git'
+          }  
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean install -DskipTests'
+            }
+            post {
+                success {
+                    echo "Now Archiving."
+                    archiveArtifacts artifacts: '**/*.war'
+                }
+            }
+        }
+        stage('Test'){
+            steps {
+                sh 'mvn test'
+            }
+
+        }
+
+        stage('Checkstyle Analysis'){
+            steps {
+                sh 'mvn checkstyle:checkstyle'
+            }
+        }
+
+        stage('Sonar Analysis') {
+            environment {
+                scannerHome = tool 'sonar4.7'
+            }
+            steps {
+               withSonarQubeEnv('sonar') {
+                   sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+                   -Dsonar.projectName=vprofile \
+                   -Dsonar.projectVersion=1.0 \
+                   -Dsonar.sources=src/ \
+                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+              }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+
+
+    }
+}
+
+```
+
+
+- Build Now
+
+This build failed because we had 82 bugs and we set our threshold at 50 for quality gates
+
+![bugs](./images/failed-jenkins.png)
+
+![failed](./images/failed-vprofile.png)
+
+![failed](./images/failed.png)
+
+The code passed the pipeline initially because we used sonar default quality gate.
+
+We are now going to increase the threshold for our quality gate
+
+[update](./images/edit-update.png) 
+
+[build2](./images/build2-sucess.png)
+
+
+## Upload Artifact to Nexus Repository
+
+### Set up Nexus repository
+
+Acess nexus with public ip at port 8081
+  - publicip:8081
+
+- Sign in
+- Click on settings
+- Click on Repositories on the top left corner of the page
+- Click on Create repository
+   - Select Maven2 (hosted)
+- Name your repository
+- Click Create Repository
+
+### Set Credentials
+
+- Go to Jenkins Dashboard
+- Manage Jenkins
+- Manage Credentials
+- Click on jenkins symbol
+![scoped](./images/scoped%20to%20jenkins.png)
+- Click on global credentials
+- Click add Credentials
+  - add username and password of nexus
+  - Id (choose a name you like i used nexus login)
+  - Description( just as you want)
+  - Click Create
+
+![credentials](./images/credentials.png)
+
+- Editing the artifact code
+
+```
+nexusArtifactUploader(
+                  nexusVersion: 'nexus3',
+                  protocol: 'http',
+                  nexusUrl: '172.31.18.28:8081',(replace this with the private ip of nexus)
+                  groupId: 'QA',
+                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                  repository: 'vprofile-repo',
+                  credentialsId: 'nexuslogin',
+                  artifacts: [
+                    [artifactId: 'vproapp',
+                     classifier: '',
+                     file: 'target/vprofile-v2.war',
+                     type: 'war']
+
+```
+
+### Set value for Timestamp
+
+- Go to manage Jenkins
+
+- Configure system
+
+- Go to Build Timestamp
+![build](./images/timestamp.png) (this will version the build id)
+
+- Create a new item
+
+```
+pipeline {
+    agent any
+    tools {
+	    maven "MAVEN3"
+	    jdk "OracleJDK8"
+	}
+    stages{
+        stage('Fetch code') {
+          steps{
+              git branch: 'vp-rem', url:'https://github.com/devopshydclub/vprofile-repo.git'
+          }  
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean install -DskipTests'
+            }
+            post {
+                success {
+                    echo "Now Archiving."
+                    archiveArtifacts artifacts: '**/*.war'
+                }
+            }
+        }
+        stage('Test'){
+            steps {
+                sh 'mvn test'
+            }
+
+        }
+
+        stage('Checkstyle Analysis'){
+            steps {
+                sh 'mvn checkstyle:checkstyle'
+            }
+        }
+
+        stage('Sonar Analysis') {
+            environment {
+                scannerHome = tool 'sonar4.7'
+            }
+            steps {
+               withSonarQubeEnv('sonar') {
+                   sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+                   -Dsonar.projectName=vprofile \
+                   -Dsonar.projectVersion=1.0 \
+                   -Dsonar.sources=src/ \
+                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+              }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage("UploadArtifact"){
+            steps{
+                nexusArtifactUploader(
+                  nexusVersion: 'nexus3',
+                  protocol: 'http',
+                  nexusUrl: '172.31.21.107:8081',
+                  groupId: 'QA',
+                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                  repository: 'vprofile-repo',
+                  credentialsId: 'nexuslogin',
+                  artifacts: [
+                    [artifactId: 'vproapp',
+                     classifier: '',
+                     file: 'target/vprofile-v2.war',
+                     type: 'war']
+    ]
+ )
+            }
+        }
+
+===
+
+    }
+}
+
+```
+- Build now
+
+![upload-artifact](./images/upload-artifact.png)
+
+![artifact](./images/nexus-artifact.png)
+
+You can click on build multiple times and build id will be in different versions.
+
+### Setting Notification to Slack
+ - Go to Manage Jenkins
+ - Click on plugins 
+ - Type notification
