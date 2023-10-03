@@ -1122,7 +1122,6 @@ pipeline {
             }
         }
 
-===
 
     }
 }
@@ -1137,6 +1136,167 @@ pipeline {
 You can click on build multiple times and build id will be in different versions.
 
 ### Setting Notification to Slack
- - Go to Manage Jenkins
- - Click on plugins 
- - Type notification
+- Go to Manage Jenkins
+- Click on plugins
+  - Available plugins 
+- Type notification and pick slack notification
+- Sign in to slack/ Create a slack account
+- Click on Create Workspace follow all the prompts and fill in the requirements as your projects requires.
+![create](./images/create-workspace.png)
+- Create a channel
+![create](./images/create-chanel.png)
+- Keep channel private or public depending on your project need.
+To integrate Jenkins with slack, we need to add `slack apps`
+
+- Google slack apps or add apps to slack
+- Search for Jenkins
+![jenkins](./images/jenkins-ci.png)
+- Add to Slack
+![add](./images/add-toslack.png)
+- Choose your channel
+![channel](./images/pick-channel.png)
+- Click Add Jenkins CI Integration
+- Copy the token in step 3 
+![save](./images/save-token.png)
+- Scroll to the end of page and Save settings.
+
+Go back to Jenkins and 
+
+- Install Slack plugin
+
+- Go to manage Jenkins - Configure system
+- Search for slack
+- Add workspace name
+- Credential
+  - click add
+  - pick jenkins icon
+  - kind
+    - secret text
+     - add token
+     - ID(give a name you choose)
+     - Description(up to you)
+     - Add
+![token](./images/token.png)
+- Credential
+  - (whatever name you called your token scroll)
+- Default channel
+ - give the name of your channel on slack
+- Click test connection
+- Sucess means that your connection worked. If You get failed, then go back and do the whole configuration again.
+- Click Save
+- Create a new item
+- Pipeline
+- Add the following code
+
+```
+def COLOR_MAP = [
+    'SUCCESS': 'good', 
+    'FAILURE': 'danger',
+]
+pipeline {
+    agent any
+    tools {
+	    maven "MAVEN3"
+	    jdk "OracleJDK8"
+	}
+
+    stages{
+        stage('Print error'){
+            steps{
+                sh 'fake comment'
+            }
+        }
+        stage('Fetch code') {
+          steps{
+              git branch: 'vp-rem', url:'https://github.com/devopshydclub/vprofile-repo.git'
+          }  
+        }
+
+        stage('Build') {
+            steps {
+                sh 'mvn clean install -DskipTests'
+            }
+            post {
+                success {
+                    echo "Now Archiving."
+                    archiveArtifacts artifacts: '**/*.war'
+                }
+            }
+        }
+        stage('Test'){
+            steps {
+                sh 'mvn test'
+            }
+
+        }
+
+        stage('Checkstyle Analysis'){
+            steps {
+                sh 'mvn checkstyle:checkstyle'
+            }
+        }
+
+        stage('Sonar Analysis') {
+            environment {
+                scannerHome = tool 'sonar4.7'
+            }
+            steps {
+               withSonarQubeEnv('sonar') {
+                   sh '''${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=vprofile \
+                   -Dsonar.projectName=vprofile \
+                   -Dsonar.projectVersion=1.0 \
+                   -Dsonar.sources=src/ \
+                   -Dsonar.java.binaries=target/test-classes/com/visualpathit/account/controllerTest/ \
+                   -Dsonar.junit.reportsPath=target/surefire-reports/ \
+                   -Dsonar.jacoco.reportsPath=target/jacoco.exec \
+                   -Dsonar.java.checkstyle.reportPaths=target/checkstyle-result.xml'''
+              }
+            }
+        }
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
+                    // true = set pipeline to UNSTABLE, false = don't
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage("UploadArtifact"){
+            steps{
+                nexusArtifactUploader(
+                  nexusVersion: 'nexus3',
+                  protocol: 'http',
+                  nexusUrl: '172.31.18.28:8081',
+                  groupId: 'QA',
+                  version: "${env.BUILD_ID}-${env.BUILD_TIMESTAMP}",
+                  repository: 'vprofile-repo',
+                  credentialsId: 'nexuslogin',
+                  artifacts: [
+                    [artifactId: 'vproapp',
+                     classifier: '',
+                     file: 'target/vprofile-v2.war',
+                     type: 'war']
+                  ]
+                )
+            }
+        }
+    }
+    post {
+        always {
+            echo 'Slack Notifications.'
+            slackSend channel: '#slack-notification',
+                color: COLOR_MAP[currentBuild.currentResult],
+                message: "*${currentBuild.currentResult}:* Job ${env.JOB_NAME} build ${env.BUILD_NUMBER} \n More info at: ${env.BUILD_URL}"
+        }
+    }
+    
+}
+
+```
+
+
+
+
